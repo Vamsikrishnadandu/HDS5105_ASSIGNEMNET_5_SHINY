@@ -13,7 +13,11 @@ ui <- dashboardPage(
                icon = icon("users")),
       menuItem("Outcomes",
                tabName = "outcomes",
-               icon = icon("heartbeat"))
+               icon = icon("heartbeat")),
+      menuItem("Data Explorer",
+               tabName = "data_explorer",
+               icon = icon("table"))
+      
     ),
     hr(),
     h4("Global Filters", style = "padding: 10px;"),
@@ -38,112 +42,156 @@ ui <- dashboardPage(
     )
   ),
   
-  dashboardBody(
-    tabItems(
-      # DEMOGRAPHICS TAB
-      tabItem(
-        tabName = "demo",
-        h2("Patient Demographics"),
-        
-        fluidRow(
-          valueBoxOutput("n_patients", width = 3),
-          valueBoxOutput("mean_age", width = 3),
-          valueBoxOutput("mean_ef",  width = 3),
-          valueBoxOutput("mean_bmi", width = 3)
-        ),
-        
-        fluidRow(
-          box(
-            title = "Age Distribution by Treatment",
+ dashboardBody(
+   tags$style(HTML("
+  table.dataTable {
+    table-layout: fixed !important;
+    width: 100% !important;
+  }
+")),
+   
+   tags$small(
+     icon("info-circle"),
+     "Click column headers (▲▼) to sort data. Current sort is shown by arrow direction.",
+     style = "color: #444;"
+   ),
+   
+   
+  tabItems(
+    
+    # DEMOGRAPHICS TAB 
+    tabItem(
+      tabName = "demo",
+      h2("Patient Demographics"),
+      
+      fluidRow(
+        valueBoxOutput("n_patients", width = 3),
+        valueBoxOutput("mean_age", width = 3),
+        valueBoxOutput("mean_ef",  width = 3),
+        valueBoxOutput("mean_bmi", width = 3)
+      ),
+      
+      fluidRow(
+        box(title = "Age Distribution by Treatment",
             status = "primary", solidHeader = TRUE,
-            width = 6,
-            plotOutput("age_plot")
-          ),
-          box(
-            title = "Ejection Fraction by Treatment",
+            width = 6, plotOutput("age_plot")),
+        
+        box(title = "Ejection Fraction by Treatment",
             status = "primary", solidHeader = TRUE,
-            width = 6,
-            plotOutput("ef_plot")
-          )
-        ),
-        
-        fluidRow(
-          box(
-            title = "Sex Distribution",
+            width = 6, plotOutput("ef_plot"))
+      ),
+      
+      fluidRow(
+        box(title = "Sex Distribution",
             status = "info", solidHeader = TRUE,
-            width = 6,
-            plotOutput("sex_bar")
-          ),
-          box(
-            title = "Race Distribution",
+            width = 6, plotOutput("sex_bar")),
+        
+        box(title = "Race Distribution",
             status = "info", solidHeader = TRUE,
-            width = 6,
-            plotOutput("race_bar")
-          )
-        ),
-        
-        fluidRow(
-          box(
-            title = "BMI Distribution",
+            width = 6, plotOutput("race_bar"))
+      ),
+      
+      fluidRow(
+        box(title = "BMI Distribution",
             status = "warning", solidHeader = TRUE,
-            width = 6,
-            plotOutput("bmi_hist")
-          ),
-          box(
-            title = "Blood Pressure by Treatment",
-            status = "warning", solidHeader = TRUE,
-            width = 6,
-            plotOutput("bp_plot")
-          )
-        ),
+            width = 6, plotOutput("bmi_hist")),
         
-        fluidRow(
-          box(
-            title = "Demographic Summary Table",
+        box(title = "Blood Pressure by Treatment",
+            status = "warning", solidHeader = TRUE,
+            width = 6, plotOutput("bp_plot"))
+      ),
+      
+      fluidRow(
+        box(title = "Demographic Summary Table",
             status = "success", solidHeader = TRUE,
             width = 12,
-            DTOutput("demo_table")
-          )
+            DTOutput("demo_table"))
+      )
+    ),
+    
+    
+    # OUTCOMES TAB 
+    tabItem(
+      tabName = "outcomes",
+      h2("Clinical Outcomes"),
+      
+      fluidRow(
+        box(width = 8, status = "primary", solidHeader = TRUE,
+            title = "Mortality by Treatment",
+            plotOutput("death_plot")),
+        
+        box(width = 4, status = "danger", solidHeader = TRUE,
+            title = "Mortality Rate Summary",
+            plotOutput("mortality_summary_plot"))
+      ),
+      
+      fluidRow(
+        box(width = 6, status = "danger",
+            title = "Hospitalisation by Treatment",
+            plotOutput("hosp_plot")),
+        
+        box(width = 6, status = "info",
+            title = "Death or Worsening HF (Primary Endpoint)",
+            plotOutput("dwhf_plot"))
+      ),
+      
+      fluidRow(
+        box(width = 12, status = "success",
+            title = "Time to Event Distributions",
+            plotOutput("time_plot"))
+      ),
+      
+      fluidRow(
+        box(width = 12, status = "success",
+            solidHeader = TRUE,
+            title = "Event Rate Summary by Treatment",
+            DTOutput("outcomes_summary"))
+      )
+    ),
+    
+    
+    # DATA EXPLORER TAB
+    tabItem(
+      tabName = "data_explorer",
+      
+      h2("Data Explorer - DIG Trial Dataset"),
+      
+      p(
+        "This table displays individual patient-level data after applying the global filters from the sidebar.",
+        style = "font-size:14px;color:#555;"
+      ),
+      fluidRow(
+        box(
+          width = 12,
+          status = "warning",
+          solidHeader = TRUE,
+          title = "Current Global Filter Selection",
+          textOutput("filter_display")
         )
       ),
       
-      # OUTCOMES TAB (Aadesh code for outcomes tab)
-      tabItem(
-        tabName = "outcomes",
-        h2("Clinical Outcomes"),
-        
-        fluidRow(
-          box(width = 8, status = "primary", solidHeader = TRUE,
-              title = "Mortality by Treatment",
-              plotOutput("death_plot")),
+      
+      fluidRow(
+        box(
+          title = "Filtered Dataset (Global Filters Apply)",
+          status = "primary",
+          solidHeader = TRUE,
+          width = 12,
+          style = "padding:0;",
           
-          box(width = 4, status = "danger", solidHeader = TRUE,
-              title = "Mortality Rate Summary",
-              plotOutput("mortality_summary_plot"))
-        ),
-        
-        
-        fluidRow(
-          box(width = 6, status = "danger", title = "Hospitalisation by Treatment",
-              plotOutput("hosp_plot")),
-          
-          box(width = 6, status = "info",
-              title = "Death or Worsening HF (Primary Endpoint)",
-              plotOutput("dwhf_plot"))
-        ),
-        
-        fluidRow(
-          box(width = 12, status = "success",
-              title = "Time to Event Distributions",
-              plotOutput("time_plot"))
-        ),
-        
-        fluidRow(
-          box(width = 12, status = "success", solidHeader = TRUE,
-              title = "Event Rate Summary by Treatment",
-              DTOutput("outcomes_summary"))
+          div(
+            style = "padding:10px;",
+            DTOutput("data_table")
+          )
         )
       )
+      
+      
+      
     )
+  
+    
   )
+)
+
 )

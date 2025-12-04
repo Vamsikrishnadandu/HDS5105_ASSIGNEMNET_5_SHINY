@@ -414,7 +414,7 @@ server <- function(input, output, session) {
       )
   })
   
-  # event rate summary table:
+  
   output$outcomes_summary <- renderDT({
     df <- outcomes_data()
     req(nrow(df) > 0)
@@ -438,6 +438,73 @@ server <- function(input, output, session) {
       rownames = FALSE
     )
   })
+  
+  # DATA EXPLORER 
+  output$filter_display <- renderText({
+    paste0(
+      "Age: ", input$age_range[1], "–", input$age_range[2],
+      " | Treatment: ", input$treatment,
+      " | Sex: ", input$sex
+    )
+  })
+  
+  output$data_table <- renderDT({
+    df <- demo_data()
+    req(nrow(df) > 0)
+    
+    df_clean <- df %>% 
+      select(
+        ID, TRTMT, AGE, SEX, RACE,
+        BMI, EJF_PER, SYSBP, DIABP,
+        HEARTRTE, DEATH, HOSP
+      )
+    
+    datatable(
+      df_clean,
+      rownames = FALSE,
+      escape = FALSE,
+      class = "stripe hover compact nowrap",
+      extensions = c("Buttons", "FixedHeader"),
+      options = list(
+        pageLength = 10,
+        scrollX = TRUE,
+        autoWidth = FALSE,
+        fixedHeader = TRUE,
+        dom = 'Bfrtip',
+        buttons = c('copy', 'csv', 'excel', 'pdf'),
+        
+        
+        columnDefs = list(
+          list(width = "60px",  targets = 0),   # ID
+          list(width = "90px",  targets = 1),   # TRTMT
+          list(width = "70px",  targets = 2),   # AGE
+          list(width = "80px",  targets = 3),   # SEX
+          list(width = "70px",  targets = 4),   # RACE
+          list(width = "90px",  targets = 5),   # BMI
+          list(width = "90px",  targets = 6),   # EF
+          list(width = "90px",  targets = 7),   # SYSBP
+          list(width = "90px",  targets = 8),   # DIABP
+          list(width = "100px", targets = 9),   # HR
+          list(width = "90px",  targets = 10),  # DEATH
+          list(width = "80px",  targets = 11)   # HOSP
+        )
+      )
+    ) %>%
+      formatStyle(
+        "DEATH",
+        backgroundColor = styleEqual("Dead", "#f8d7da"),
+        fontWeight = "bold"
+      ) %>%
+      formatStyle(
+        "HOSP",
+        backgroundColor = styleEqual("Yes", "#fff3cd"),
+        fontWeight = "bold"
+      )
+  })
+  
+  
+  
+  
   
   
   
