@@ -113,10 +113,15 @@ ui <- dashboardPage(
         h2("Clinical Outcomes"),
         
         fluidRow(
+          box(width = 8, status = "primary", solidHeader = TRUE,
+              title = "Mortality by Treatment",
+              plotOutput("death_plot")),
           
-          box(width = 8, status = "primary", title = "Mortality by Treatment",
-              plotOutput("death_plot"))
+          box(width = 4, status = "danger", solidHeader = TRUE,
+              title = "Mortality Rate Summary",
+              plotOutput("mortality_summary_plot"))
         ),
+        
         
         fluidRow(
           box(width = 6, status = "danger", title = "Hospitalisation by Treatment",
@@ -131,6 +136,12 @@ ui <- dashboardPage(
           box(width = 12, status = "success",
               title = "Time to Event Distributions",
               plotOutput("time_plot"))
+        ),
+        
+        fluidRow(
+          box(width = 12, status = "success", solidHeader = TRUE,
+              title = "Event Rate Summary by Treatment",
+              DTOutput("outcomes_summary"))
         )
       )
     )
