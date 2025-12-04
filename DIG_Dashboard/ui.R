@@ -107,23 +107,12 @@ ui <- dashboardPage(
         )
       ),
       
-      # OUTCOMES TAB (your teammate’s code)
+      # OUTCOMES TAB (Aadesh code for outcomes tab)
       tabItem(
         tabName = "outcomes",
         h2("Clinical Outcomes"),
         
         fluidRow(
-          box(width = 4, status = "warning", title = "Filters",
-              selectInput("out_trt", "Treatment:",
-                          choices = c("All", "Placebo", "Digoxin"),
-                          selected = "All"),
-              selectInput("out_sex", "Sex:",
-                          choices = c("All", "Male", "Female"),
-                          selected = "All"),
-              sliderInput("out_age", "Age Range:",
-                          min = 20, max = 100,
-                          value = c(40, 80))
-          ),
           
           box(width = 8, status = "primary", title = "Mortality by Treatment",
               plotOutput("death_plot"))

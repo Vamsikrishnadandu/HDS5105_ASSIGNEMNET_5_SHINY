@@ -4,7 +4,7 @@ library(tidyverse)
 library(DT)
 library(scales)
 
-# Load and prepare data
+# Loading the dig data
 dig <- read.csv("DIG-1.csv") %>%
   mutate(
     TRTMT = factor(TRTMT, levels = c(0, 1),
@@ -21,7 +21,7 @@ dig <- read.csv("DIG-1.csv") %>%
 
 server <- function(input, output, session) {
   
-  # ---------------- DEMOGRAPHICS REACTIVE DATA ----------------
+  # demograohic reactive data:
   demo_data <- reactive({
     df <- dig
     
@@ -42,7 +42,7 @@ server <- function(input, output, session) {
     df
   })
   
-  # ---------------- DEMOGRAPHICS VALUE BOXES ----------------
+  # demographic value boxes:
   output$n_patients <- renderValueBox({
     df <- demo_data()
     valueBox(
@@ -83,7 +83,7 @@ server <- function(input, output, session) {
     )
   })
   
-  # ---------------- DEMOGRAPHICS PLOTS ----------------
+  # demographic plots:
   output$age_plot <- renderPlot({
     df <- demo_data()
     req(nrow(df) > 0)
@@ -196,7 +196,7 @@ server <- function(input, output, session) {
       theme(legend.position = "top")
   })
   
-  # ---------------- DEMOGRAPHICS TABLE ----------------
+  #demographic tables:
   output$demo_table <- renderDT({
     df <- demo_data()
     req(nrow(df) > 0)
@@ -221,25 +221,28 @@ server <- function(input, output, session) {
       )
   })
   
-  # ---------------- OUTCOMES REACTIVE DATA ----------------
+  # outcome reactive data:
   outcomes_data <- reactive({
     df <- dig
     
-    if (input$out_trt != "All") {
-      df <- df %>% filter(TRTMT == input$out_trt)
+    if (!is.null(input$age_range)) {
+      df <- df %>%
+        filter(AGE >= input$age_range[1],
+               AGE <= input$age_range[2])
     }
     
-    if (input$out_sex != "All") {
-      df <- df %>% filter(SEX == input$out_sex)
+    if (!is.null(input$treatment) && input$treatment != "All") {
+      df <- df %>% filter(TRTMT == input$treatment)
     }
     
-    df <- df %>% filter(AGE >= input$out_age[1],
-                        AGE <= input$out_age[2])
+    if (!is.null(input$sex) && input$sex != "All") {
+      df <- df %>% filter(SEX == input$sex)
+    }
     
     df
   })
   
-  # ---------------- OUTCOMES PLOTS ----------------
+  # outcome plots
   output$death_plot <- renderPlot({
     df <- outcomes_data()
     req(nrow(df) > 0)
