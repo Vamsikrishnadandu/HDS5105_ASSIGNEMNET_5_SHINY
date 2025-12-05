@@ -501,11 +501,143 @@ server <- function(input, output, session) {
         fontWeight = "bold"
       )
   })
+
+# medications reactive
+meds_data <- reactive({
+  df <- demo_data()   # reuse demographic filtered data
+  req(nrow(df) > 0)
+  df
+})
+
+# medication prevalence by treatment
+output$med_prevalence_plot <- renderPlot({
+  df <- meds_data()
+  req(nrow(df) > 0)
   
+  med_summary <- df %>%
+    group_by(TRTMT) %>%
+    summarise(
+      `ACE Inhibitors`   = round(sum(ACEINHIB == 1, na.rm = TRUE) / n() * 100, 1),
+      `Diuretics`        = round(sum(DIURET   == 1, na.rm = TRUE) / n() * 100, 1),
+      `Nitrates`         = round(sum(NITRATES == 1, na.rm = TRUE) / n() * 100, 1),
+      `Recent Digoxin`   = round(sum(DIGUSE   == 1, na.rm = TRUE) / n() * 100, 1),
+      .groups = "drop"
+    ) %>%
+    pivot_longer(
+      cols = -TRTMT,
+      names_to = "Medication",
+      values_to = "Percentage"
+    )
   
+  ggplot(med_summary, aes(x = Medication, y = Percentage, fill = TRTMT)) +
+    geom_col(position = "dodge", width = 0.6) +
+    geom_text(aes(label = paste0(Percentage, "%")),
+              vjust = -0.3, position = position_dodge(width = 0.6), size = 3.5) +
+    scale_fill_manual(values = c("Placebo" = "#3498db", "Digoxin" = "#e74c3c")) +
+    scale_y_continuous(limits = c(0, 110)) +
+    labs(
+      x = "Medication",
+      y = "Prevalence (%)",
+      fill = "Treatment"
+    ) +
+    theme_minimal() +
+    theme(
+      axis.text.x = element_text(angle = 45, hjust = 1),
+      legend.position = "top"
+    )
+})
+
+# ace inhibhitors vs mortality
+output$ace_outcomes_plot <- renderPlot({
+  df <- outcomes_data()
+  req(nrow(df) > 0)
   
+  ace_outcomes <- df %>%
+    filter(!is.na(ACEINHIB), !is.na(DEATH)) %>%
+    mutate(ACE = ifelse(ACEINHIB == 1, "On ACE-I", "No ACE-I")) %>%
+    group_by(ACE, DEATH) %>%
+    summarise(Count = n(), .groups = "drop") %>%
+    group_by(ACE) %>%
+    mutate(
+      Total = sum(Count),
+      Percentage = round(Count / Total * 100, 1)
+    ) %>%
+    filter(DEATH == "Dead")
   
+  ggplot(ace_outcomes, aes(x = ACE, y = Percentage, fill = ACE)) +
+    geom_col(width = 0.5) +
+    geom_text(aes(label = paste0(Percentage, "%\n(n=", Count, ")")),
+              vjust = -0.3, size = 4, fontface = "bold") +
+    scale_fill_manual(values = c("On ACE-I" = "#3498db", "No ACE-I" = "#e74c3c")) +
+    scale_y_continuous(limits = c(0, max(ace_outcomes$Percentage) * 1.4)) +
+    labs(
+      x = "ACE Inhibitor Use",
+      y = "Death Rate (%)"
+    ) +
+    theme_minimal() +
+    theme(
+      legend.position = "none"
+    )
+})
+
+# diuretics vs mortality
+output$diuretics_outcomes_plot <- renderPlot({
+  df <- outcomes_data()
+  req(nrow(df) > 0)
   
+  diur_outcomes <- df %>%
+    filter(!is.na(DIURET), !is.na(DEATH)) %>%
+    mutate(Diuretic = ifelse(DIURET == 1, "On Diuretics", "No Diuretics")) %>%
+    group_by(Diuretic, DEATH) %>%
+    summarise(Count = n(), .groups = "drop") %>%
+    group_by(Diuretic) %>%
+    mutate(
+      Total = sum(Count),
+      Percentage = round(Count / Total * 100, 1)
+    ) %>%
+    filter(DEATH == "Dead")
   
+  ggplot(diur_outcomes, aes(x = Diuretic, y = Percentage, fill = Diuretic)) +
+    geom_col(width = 0.5) +
+    geom_text(aes(label = paste0(Percentage, "%\n(n=", Count, ")")),
+              vjust = -0.3, size = 4, fontface = "bold") +
+    scale_fill_manual(values = c("On Diuretics" = "#3498db", "No Diuretics" = "#e74c3c")) +
+    scale_y_continuous(limits = c(0, max(diur_outcomes$Percentage) * 1.4)) +
+    labs(
+      x = "Diuretic Use",
+      y = "Death Rate (%)"
+    ) +
+    theme_minimal() +
+    theme(
+      legend.position = "none"
+    )
+})
+
+# medication summary table
+output$med_table <- renderDT({
+  df <- meds_data()
+  req(nrow(df) > 0)
   
+  med_tbl <- df %>%
+    group_by(TRTMT) %>%
+    summarise(
+      `Total Patients`         = n(),
+      `ACE Inhibitors (n)`     = sum(ACEINHIB == 1, na.rm = TRUE),
+      `ACE Inhibitors (%)`     = round(`ACE Inhibitors (n)` / n() * 100, 1),
+      `Diuretics (n)`          = sum(DIURET == 1, na.rm = TRUE),
+      `Diuretics (%)`          = round(`Diuretics (n)` / n() * 100, 1),
+      `Nitrates (n)`           = sum(NITRATES == 1, na.rm = TRUE),
+      `Nitrates (%)`           = round(`Nitrates (n)` / n() * 100, 1),
+      `Recent Digoxin (n)`     = sum(DIGUSE == 1, na.rm = TRUE),
+      `Recent Digoxin (%)`     = round(`Recent Digoxin (n)` / n() * 100, 1),
+      .groups = "drop"
+    )
+  
+  datatable(
+    med_tbl,
+    options = list(pageLength = 10, scrollX = TRUE),
+    rownames = FALSE
+  )
+})
+
 }

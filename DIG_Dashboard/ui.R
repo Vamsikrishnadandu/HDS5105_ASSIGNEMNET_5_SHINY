@@ -14,6 +14,9 @@ ui <- dashboardPage(
       menuItem("Outcomes",
                tabName = "outcomes",
                icon = icon("heartbeat")),
+      menuItem("Medications",
+               tabName = "meds",
+               icon = icon("pills")),
       menuItem("Data Explorer",
                tabName = "data_explorer",
                icon = icon("table"))
@@ -49,12 +52,6 @@ ui <- dashboardPage(
     width: 100% !important;
   }
 ")),
-   
-   tags$small(
-     icon("info-circle"),
-     "Click column headers (▲▼) to sort data. Current sort is shown by arrow direction.",
-     style = "color: #444;"
-   ),
    
    
   tabItems(
@@ -149,12 +146,57 @@ ui <- dashboardPage(
       )
     ),
     
+    # medications tab:
+    tabItem(
+      tabName = "meds",
+      h2("Medication Use by Treatment"),
+      
+      fluidRow(
+        box(
+          title = "Medication Prevalence by Treatment",
+          status = "primary", solidHeader = TRUE,
+          width = 12,
+          plotOutput("med_prevalence_plot")
+        )
+      ),
+      
+      fluidRow(
+        box(
+          title = "ACE Inhibitors vs Mortality",
+          status = "info", solidHeader = TRUE,
+          width = 6,
+          plotOutput("ace_outcomes_plot")
+        ),
+        
+        box(
+          title = "Diuretics vs Mortality",
+          status = "info", solidHeader = TRUE,
+          width = 6,
+          plotOutput("diuretics_outcomes_plot")
+        )
+      ),
+      
+      fluidRow(
+        box(
+          title = "Medication Summary Table",
+          status = "success", solidHeader = TRUE,
+          width = 12,
+          DTOutput("med_table")
+        )
+      )
+    ),
     
     # DATA EXPLORER TAB
     tabItem(
       tabName = "data_explorer",
       
       h2("Data Explorer - DIG Trial Dataset"),
+      
+      tags$small(
+        icon("info-circle"),
+        "Click column headers (▲▼) to sort data. Current sort is shown by arrow direction.",
+        style = "color: #444;"
+      ),
       
       p(
         "This table displays individual patient-level data after applying the global filters from the sidebar.",
